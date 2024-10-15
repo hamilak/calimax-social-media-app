@@ -1,26 +1,22 @@
-import {  FC, FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FC, FormEvent, useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import Image from '../assets/network-user-icon.png'
-import { Drawer, Input, List, RadioTile, RadioTileGroup, useMediaQuery } from 'rsuite'
+import { Drawer, Input, List } from 'rsuite'
 import { PostFormValues } from '../Types/FormValues'
 import axiosInstance from '../interceptor/axiosInstance'
 import { PostResponseValues, UserResponseValues } from '../Types/ResponseValues'
 import { truncateDescription } from '../utils/functions'
 import { useAuth } from '../context/AuthContext'
 import Posts from '../components/Posts'
-import { IoMdHappy, IoMdSad } from 'react-icons/io'
-import { RiEmotionLaughLine } from 'react-icons/ri'
-import { AiOutlinePlus } from 'react-icons/ai'
 
-const Profile: FC = () => {
-    const [isInline] = useMediaQuery('xl');
+const Post: FC = () => {
     const [formValues, setFormValues] = useState<PostFormValues>({
         content: '',
         image: null
     })
     const [open, setOpen] = useState<boolean>(false)
-    // const [imagePreview, setImagePreview] = useState<string | null>(null);
-    // const fileInputRef = useRef<HTMLInputElement>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [posts, setPosts] = useState<PostResponseValues[]>([])
     const [userValues, setUserValues] = useState<UserResponseValues>()
     const [selectedList, setSelectedList] = useState<string>('none')
@@ -38,31 +34,31 @@ const Profile: FC = () => {
         setFormValues((prevValue) => ({ ...prevValue, [name]: value }))
     }
 
-    // const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    //     const file = e.target.files?.[0];
-    //     if (file) {
-    //         const fileSizeInMB = file.size / 1024 / 1024;
-    //         const fileType = file.type;
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const fileSizeInMB = file.size / 1024 / 1024;
+            const fileType = file.type;
 
-    //         if (!['image/jpeg', 'image/jpg', 'image/png'].includes(fileType)) {
-    //             alert('Only JPG, JPEG, or PNG files are allowed.');
-    //             return;
-    //         }
-    //         if (fileSizeInMB > 10) {
-    //             alert('File size exceeds 10MB.');
-    //             return;
-    //         }
+            if (!['image/jpeg', 'image/jpg', 'image/png'].includes(fileType)) {
+                alert('Only JPG, JPEG, or PNG files are allowed.');
+                return;
+            }
+            if (fileSizeInMB > 10) {
+                alert('File size exceeds 10MB.');
+                return;
+            }
 
-    //         setFormValues((prevValue) => ({ ...prevValue, image: file }));
-    //         setImagePreview(URL.createObjectURL(file));
-    //     }
-    // };
+            setFormValues((prevValue) => ({ ...prevValue, image: file }));
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
 
-    // const handleImageChange = () => {
-    //     if (fileInputRef.current) {
-    //         fileInputRef.current.click();
-    //     }
-    // };
+    const handleImageChange = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
@@ -130,8 +126,8 @@ const Profile: FC = () => {
 
     return (
         <Layout>
-            <div className='flex h-full'>
-                <div className='w-2/3 overflow-auto'>
+            <div className='flex min-h-full'>
+                <div className='w-2/3 '>
                     <div>
                         <h6>{userValues?.username}</h6>
                     </div>
@@ -155,18 +151,18 @@ const Profile: FC = () => {
                                     <p className='font-semibold text-2xl'>{userValues?.following.length}</p>
                                 </div>
                             </div>
-                            <div className='flex justify-center'>
-                                <button className='hover:bg-purple-800 bg-purple-600 font-bold px-6 py-2 rounded-md text-white w-3/4'>Edit profile</button>
+                            <div className='flex justify-between'>
+                                <button className='hover:bg-purple-800 bg-purple-600 font-bold px-6 py-2 rounded-md text-white'>Edit profile</button>
+                                <button onClick={() => setOpen(true)} className='hover:bg-gray-300 bg-gray-200 font-bold px-6 py-2 rounded-md'>New post</button>
                             </div>
                         </div>
                     </div>
                     <div className='border-t overflow-auto'>
-                        <p className='text-center font-bold text-base pt-4'>My Mood</p>
-                        <button onClick={() => setOpen(true)} className='hover:bg-gray-300 bg-gray-200 font-bold px-6 py-2 rounded-md'>How are you feeling?</button>
+                        <p className='text-center font-bold text-base pt-4'>My Posts</p>
                         <Posts showButton={true} setOpen={setOpen} noPostsMessage='No posts' posts={posts} />
                     </div>
                 </div>
-                <div className='w-1/3 border-l max-h-full overflow-auto'>
+                <div className='w-1/3 border-l'>
                     {selectedList === 'none' ? (
                         <div className='flex justify-center items-center min-h-full'>
                             <p>Click <button onClick={() => handleSelectList('followers')} className='text-blue-500'>Followers</button> or <button onClick={() => handleSelectList('following')} className='text-blue-500'>Following</button> to see the list</p>
@@ -260,23 +256,10 @@ const Profile: FC = () => {
                     <div>
                         <form onSubmit={handleSubmit}>
                             <div>
-                                <label className='font-semibold text-base' htmlFor="content">Mood</label>
-                                <div>
-                                    <RadioTileGroup defaultValue="blank" inline={isInline} aria-label="Mood">
-                                        <RadioTile icon={<IoMdHappy size={16}/>} label="Happy" value="happy">
-                                        </RadioTile>
-                                        <RadioTile icon={<IoMdSad size={16} />} label="Sad" value="sad">
-                                        </RadioTile>
-                                        <RadioTile icon={<RiEmotionLaughLine size={16} />} label="Excited" value="excited">
-                                        </RadioTile>
-                                        <RadioTile icon={<AiOutlinePlus size={16} />} label="Add" value="add">
-                                        </RadioTile>
-                                    </RadioTileGroup>
-                                </div>
-                                <label className='font-semibold text-base' htmlFor="reason">Why?</label>
-                                <Input value={formValues.content} onChange={(value) => handleChange('content', value)} name='content' placeholder='maximum 10 words...' />
+                                <label className='font-semibold text-base' htmlFor="content">Content</label>
+                                <Input value={formValues.content} onChange={(value) => handleChange('content', value)} name='content' />
                             </div>
-                            {/* <div className='mt-4'>
+                            <div className='mt-4'>
                                 <label className='font-semibold text-base' htmlFor="image">Image</label>
                                 <div
                                     className='border-dashed border-2 border-gray-400 p-4 text-center cursor-pointer flex justify-center'
@@ -295,8 +278,8 @@ const Profile: FC = () => {
                                     accept="image/png, image/jpeg"
                                     onChange={handleFileChange}
                                 />
-                            </div> */}
-                            <button type='submit' className='mt-4 hover:bg-purple-800 bg-purple-600 font-bold px-6 py-2 rounded-md text-white'>Done</button>
+                            </div>
+                            <button type='submit' className='mt-4 hover:bg-purple-800 bg-purple-600 font-bold px-6 py-2 rounded-md text-white'>Submit</button>
                         </form>
                     </div>
                 </Drawer.Body>
@@ -305,4 +288,4 @@ const Profile: FC = () => {
     )
 }
 
-export default Profile
+export default Post
